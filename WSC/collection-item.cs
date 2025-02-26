@@ -14,7 +14,7 @@ namespace WSC.Models
         
         // Foreign key to the Card entity
         [ForeignKey("CardId")]
-        public Card Card { get; set; }
+        public WSC.Models.Card Card { get; set; }
         
         // User ID, could be null for guest collections
         public string UserId { get; set; }

@@ -1,4 +1,4 @@
-@using WSC.Models
+﻿@using WSC.Models
 @using WSC.Services
 @inject ICollectionService CollectionService
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -63,7 +63,7 @@
 
 @code {
     [Parameter]
-    public Card Card { get; set; }
+    public WSC.Models.Card Card { get; set; }
 
     [Parameter]
     public bool IsSelected { get; set; }

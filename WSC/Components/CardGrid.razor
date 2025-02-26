@@ -29,7 +29,7 @@
             @foreach (var card in Cards)
             {
                 <div class="card-item">
-                    <CardDisplay Card="card"
+                    <CardDisplay Card ="card"
                                  IsSelected="SelectedCard?.CardId == card.CardId"
                                  UserId="@UserId"
                                  GuestId="@GuestId"
@@ -52,7 +52,7 @@
 
 @code {
     [Parameter]
-    public List<Card> Cards { get; set; }
+    public List<WSC.Models.Card> Cards { get; set; }
 
     [Parameter]
     public int TotalCards { get; set; }
@@ -72,7 +72,7 @@
     [Parameter]
     public EventCallback<Card> OnCardSelected { get; set; }
 
-    private Card SelectedCard { get; set; }
+    private WSC.Models.Card SelectedCard { get; set; }
     private string UserId { get; set; }
     private string GuestId { get; set; }
 
