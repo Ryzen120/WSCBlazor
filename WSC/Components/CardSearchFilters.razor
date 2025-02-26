@@ -1,7 +1,7 @@
+// WSC/Components/CardSearchFilters.razor
 @using WSC.Models
 @using WSC.Services
 @inject ICardService CardService
-@inject SeriesMapper SeriesMapper
 
 <div class="card filter-card">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -10,32 +10,19 @@
             @(ShowFilters ? "Hide Filters" : "Show Filters")
         </button>
     </div>
-    
+
     <div class="card-body @(ShowFilters ? "" : "d-none")">
         <div class="row">
-            <div class="col-md-4 mb-3">
+            <div class="col-md-6 mb-3">
                 <div class="form-group">
                     <label for="searchText">Search Text</label>
-                    <input type="text" class="form-control" id="searchText" 
-                           @bind="Filter.SearchText" @bind:event="oninput" 
-                           placeholder="Card name, number, effects..." />
+                    <input type="text" class="form-control" id="searchText"
+                           @bind="Filter.SearchText" @bind:event="oninput"
+                           placeholder="Card name, ID, effects..." />
                 </div>
             </div>
-            
-            <div class="col-md-4 mb-3">
-                <div class="form-group">
-                    <label for="series">Series</label>
-                    <select class="form-select" id="series" @bind="Filter.Series">
-                        <option value="">All Series</option>
-                        @foreach (var series in SeriesList)
-                        {
-                            <option value="@series.Key">@series.Value</option>
-                        }
-                    </select>
-                </div>
-            </div>
-            
-            <div class="col-md-4 mb-3">
+
+            <div class="col-md-6 mb-3">
                 <div class="form-group">
                     <label for="cardType">Card Type</label>
                     <select class="form-select" id="cardType" @bind="Filter.CardType">
@@ -48,7 +35,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-md-3 mb-3">
                 <div class="form-group">
@@ -62,7 +49,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="col-md-3 mb-3">
                 <div class="form-group">
                     <label for="level">Level</label>
@@ -75,7 +62,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="col-md-3 mb-3">
                 <div class="form-group">
                     <label for="soul">Soul</label>
@@ -88,7 +75,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="col-md-3 mb-3">
                 <div class="form-group">
                     <label for="power">Power</label>
@@ -102,7 +89,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-md-4 mb-3">
                 <div class="form-group">
@@ -116,7 +103,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="col-md-4 mb-3">
                 <div class="form-group">
                     <label for="trigger">Trigger</label>
@@ -129,7 +116,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="col-md-4 mb-3">
                 <div class="form-group">
                     <label for="color">Color</label>
@@ -143,18 +130,18 @@
                 </div>
             </div>
         </div>
-        
+
         @if (ShowCollectionFilter)
         {
             <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" id="collectionOnly" 
+                <input class="form-check-input" type="checkbox" id="collectionOnly"
                        @bind="Filter.CollectionOnly" />
                 <label class="form-check-label" for="collectionOnly">
                     My Collection Only
                 </label>
             </div>
         }
-        
+
         <div class="d-flex justify-content-between">
             <button class="btn btn-primary" @onclick="ApplyFilters">Apply Filters</button>
             <button class="btn btn-secondary" @onclick="ResetFilters">Reset Filters</button>
@@ -174,7 +161,6 @@
 
     private bool ShowFilters { get; set; } = true;
 
-    private Dictionary<string, string> SeriesList { get; set; } = new Dictionary<string, string>();
     private List<string> CardTypes { get; set; } = new List<string>();
     private List<string> Rarities { get; set; } = new List<string>();
     private List<int> Levels { get; set; } = new List<int>();
@@ -192,9 +178,6 @@
     private async Task LoadFilterOptions()
     {
         // Load filter options from service
-        SeriesList = SeriesMapper.GetAllSeries();
-
-        // Load other filter options
         CardTypes = await CardService.GetCardTypesAsync();
         Rarities = await CardService.GetRaritiesAsync();
         Levels = await CardService.GetLevelsAsync();
@@ -237,11 +220,11 @@
     .filter-card {
         margin-bottom: 20px;
     }
-    
+
     .form-group {
         margin-bottom: 10px;
     }
-    
+
     label {
         font-weight: 500;
         margin-bottom: 3px;

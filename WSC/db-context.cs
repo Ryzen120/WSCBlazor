@@ -1,3 +1,4 @@
+// WSC/db-context.cs
 using Microsoft.EntityFrameworkCore;
 using WSC.Models;
 
@@ -21,33 +22,29 @@ namespace WSC.Data
             modelBuilder.Entity<Card>()
                 .HasIndex(c => c.CardId)
                 .IsUnique();
-                
-            modelBuilder.Entity<Card>()
-                .HasIndex(c => c.CardNumber)
-                .IsUnique();
-                
+
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
-                
+
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
-                
+
             // Define relationship between CollectionItem and Card
             modelBuilder.Entity<CollectionItem>()
                 .HasOne(ci => ci.Card)
                 .WithMany()
                 .HasForeignKey(ci => ci.CardId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             // Define a unique constraint for user collection items
             // (A user can only have one entry per card in their collection)
             modelBuilder.Entity<CollectionItem>()
                 .HasIndex(ci => new { ci.UserId, ci.CardId })
                 .IsUnique()
                 .HasFilter("[UserId] IS NOT NULL");
-                
+
             // Define a unique constraint for guest collection items
             modelBuilder.Entity<CollectionItem>()
                 .HasIndex(ci => new { ci.GuestId, ci.CardId })

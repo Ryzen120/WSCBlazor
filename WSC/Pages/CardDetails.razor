@@ -48,31 +48,23 @@
                 <div class="col-md-7">
                     <div class="card-info">
                         <h1 class="card-title">@Card.Name</h1>
-                        
+
                         <div class="card-identifier">
-                            <span class="card-number">@Card.CardNumber</span>
                             <span class="card-id">ID: @Card.CardId</span>
                         </div>
-                        
+
                         <div class="card-badges mb-3">
                             @if (!string.IsNullOrEmpty(Card.CardType))
                             {
-                                <span class="badge bg-primary">@Card.CardType</span>
-                            }
+                    <span class="badge bg-primary">@Card.CardType</span>}
                             @if (!string.IsNullOrEmpty(Card.Rarity))
                             {
-                                <span class="badge bg-secondary">@Card.Rarity</span>
-                            }
+                    <span class="badge bg-secondary">@Card.Rarity</span>}
                             @if (!string.IsNullOrEmpty(Card.Color))
                             {
-                                <span class="badge bg-@GetColorClass(Card.Color)">@Card.Color</span>
-                            }
-                            @if (!string.IsNullOrEmpty(Card.Series))
-                            {
-                                <span class="badge bg-info">@Card.Series</span>
-                            }
+                    <span class="badge bg-@GetColorClass(Card.Color)">@Card.Color</span>}
                         </div>
-                        
+
                         <div class="card-stats">
                             <div class="row">
                                 <div class="col-md-3 col-6">
@@ -101,80 +93,71 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="card-properties mt-3">
                             @if (!string.IsNullOrEmpty(Card.Trigger))
                             {
-                                <div class="property">
-                                    <span class="property-label">Trigger:</span>
-                                    <span class="property-value">@Card.Trigger</span>
-                                </div>
-                            }
-                            
+                    <div class="property">
+                        <span class="property-label">Trigger:</span>
+                        <span class="property-value">@Card.Trigger</span>
+                    </div>}
+
                             @if (!string.IsNullOrEmpty(Card.Traits))
                             {
-                                <div class="property">
-                                    <span class="property-label">Traits:</span>
-                                    <span class="property-value">@Card.Traits</span>
-                                </div>
-                            }
-                            
+                    <div class="property">
+                        <span class="property-label">Traits:</span>
+                        <span class="property-value">@Card.Traits</span>
+                    </div>}
+
                             @if (!string.IsNullOrEmpty(Card.Effect))
                             {
-                                <div class="property">
-                                    <span class="property-label">Effect:</span>
-                                    <div class="property-value card-text">@Card.Effect</div>
-                                </div>
-                            }
-                            
+                    <div class="property">
+                        <span class="property-label">Effect:</span>
+                        <div class="property-value card-text">@Card.Effect</div>
+                    </div>}
+
                             @if (!string.IsNullOrEmpty(Card.Flavor))
                             {
-                                <div class="property">
-                                    <span class="property-label">Flavor Text:</span>
-                                    <div class="property-value card-flavor">@Card.Flavor</div>
-                                </div>
-                            }
-                            
+                    <div class="property">
+                        <span class="property-label">Flavor Text:</span>
+                        <div class="property-value card-flavor">@Card.Flavor</div>
+                    </div>}
+
                             @if (!string.IsNullOrEmpty(Card.Illustrator))
                             {
-                                <div class="property">
-                                    <span class="property-label">Illustrator:</span>
-                                    <span class="property-value">@Card.Illustrator</span>
-                                </div>
-                            }
-                            
+                    <div class="property">
+                        <span class="property-label">Illustrator:</span>
+                        <span class="property-value">@Card.Illustrator</span>
+                    </div>}
+
                             @if (!string.IsNullOrEmpty(Card.Expansion))
                             {
-                                <div class="property">
-                                    <span class="property-label">Expansion:</span>
-                                    <span class="property-value">@Card.Expansion</span>
-                                </div>
-                            }
-                            
+                    <div class="property">
+                        <span class="property-label">Expansion:</span>
+                        <span class="property-value">@Card.Expansion</span>
+                    </div>}
+
                             @if (!string.IsNullOrEmpty(Card.Side))
                             {
-                                <div class="property">
-                                    <span class="property-label">Side:</span>
-                                    <span class="property-value">@Card.Side</span>
-                                </div>
-                            }
+                    <div class="property">
+                        <span class="property-label">Side:</span>
+                        <span class="property-value">@Card.Side</span>
+                    </div>}
                         </div>
-                        
+
                         <div class="card-actions mt-4">
                             @if (InCollection)
                             {
-                                <div class="quantity-controls">
-                                    <button class="btn btn-outline-primary" @onclick="DecrementQuantity">-</button>
-                                    <span class="quantity">@Quantity</span>
-                                    <button class="btn btn-outline-primary" @onclick="IncrementQuantity">+</button>
-                                </div>
-                                <button class="btn btn-danger" @onclick="RemoveFromCollection">Remove from Collection</button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-primary" @onclick="AddToCollection">Add to Collection</button>
-                            }
-                            
+                    <div class="quantity-controls">
+                        <button class="btn btn-outline-primary" @onclick="DecrementQuantity">-</button>
+                        <span class="quantity">@Quantity</span>
+                        <button class="btn btn-outline-primary" @onclick="IncrementQuantity">+</button>
+                    </div>
+                                        <button class="btn btn-danger" @onclick="RemoveFromCollection">Remove from Collection</button> }
+                                                        else
+                                                        {
+                                        <button class="btn btn-primary" @onclick="AddToCollection">Add to Collection</button>}
+
                             <button class="btn btn-secondary" @onclick="GoBack">Go Back</button>
                         </div>
                     </div>

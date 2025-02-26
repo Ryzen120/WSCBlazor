@@ -18,44 +18,37 @@
     <div class="card-info">
         <div class="card-title" title="@Card.Name">@Card.Name</div>
         <div class="card-details">
-            <span class="card-number">@Card.CardNumber</span>
+            <span class="card-id">ID: @Card.CardId</span>
             <span class="card-rarity">@Card.Rarity</span>
         </div>
         <div class="card-properties">
             @if (!string.IsNullOrEmpty(Card.CardType))
             {
-                <span class="badge bg-secondary">@Card.CardType</span>
-            }
+    <span class="badge bg-secondary">@Card.CardType</span>}
             @if (Card.Level > 0)
             {
-                <span class="badge bg-info">Lvl @Card.Level</span>
-            }
+    <span class="badge bg-info">Lvl @Card.Level</span>}
             @if (Card.Power > 0)
             {
-                <span class="badge bg-danger">@Card.Power</span>
-            }
+    <span class="badge bg-danger">@Card.Power</span>}
             @if (!string.IsNullOrEmpty(Card.Soul))
             {
-                <span class="badge bg-warning">Soul @Card.Soul</span>
-            }
+    <span class="badge bg-warning">Soul @Card.Soul</span>}
         </div>
         <div class="card-actions">
             @if (!string.IsNullOrEmpty(UserId) || !string.IsNullOrEmpty(GuestId))
             {
-                @if (InCollection)
-                {
-                    <div class="quantity-controls">
-                        <button class="btn btn-sm btn-outline-primary" @onclick="DecrementQuantity">-</button>
-                        <span class="quantity">@Quantity</span>
-                        <button class="btn btn-sm btn-outline-primary" @onclick="IncrementQuantity">+</button>
-                    </div>
-                    <button class="btn btn-sm btn-danger" @onclick="RemoveFromCollection">Remove</button>
-                }
-                else
-                {
-                    <button class="btn btn-sm btn-primary" @onclick="AddToCollection">Add to Collection</button>
-                }
-            }
+    @if (InCollection)
+    {
+    <div class="quantity-controls">
+        <button class="btn btn-sm btn-outline-primary" @onclick="DecrementQuantity">-</button>
+        <span class="quantity">@Quantity</span>
+        <button class="btn btn-sm btn-outline-primary" @onclick="IncrementQuantity">+</button>
+    </div>
+                        <button class="btn btn-sm btn-danger" @onclick="RemoveFromCollection">Remove</button> }
+                                        else
+                                        {
+                        <button class="btn btn-sm btn-primary" @onclick="AddToCollection">Add to Collection</button>                }            }
             <button class="btn btn-sm btn-info" @onclick="ViewDetails">Details</button>
         </div>
     </div>

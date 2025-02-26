@@ -58,10 +58,14 @@
         // Check for query parameters
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
 
-        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("series", out var seriesValue))
+        // For any parameters that might be needed
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("cardId", out var cardIdValue))
         {
-            filterOptions.Series = seriesValue.ToString();
-            await LoadCards();
+            if (int.TryParse(cardIdValue, out var cardId))
+            {
+                filterOptions.CardId = cardId;
+                await LoadCards();
+            }
         }
     }
 

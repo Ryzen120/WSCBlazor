@@ -1,3 +1,4 @@
+// WSC/Services/collection-service-impl.cs
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,12 +12,12 @@ namespace WSC.Services
     public class CollectionService : ICollectionService
     {
         private readonly AppDbContext _context;
-        private readonly SeriesMapper _seriesMapper;
+        private readonly ICardService _cardService;
 
-        public CollectionService(AppDbContext context, SeriesMapper seriesMapper)
+        public CollectionService(AppDbContext context, ICardService cardService)
         {
             _context = context;
-            _seriesMapper = seriesMapper;
+            _cardService = cardService;
         }
 
         public async Task<bool> AddToCollectionAsync(int cardId, string userId = null, string guestId = null, int quantity = 1)
@@ -135,7 +136,7 @@ namespace WSC.Services
                 .Where(ci => ci.UserId == userId || ci.GuestId == guestId);
 
             var totalCount = await query.CountAsync();
-            
+
             var collectionItems = await query
                 .OrderByDescending(ci => ci.AddedDate)
                 .Skip((page - 1) * pageSize)
@@ -149,15 +150,13 @@ namespace WSC.Services
                 .Where(c => cardIds.Contains(c.CardId))
                 .ToListAsync();
 
-            // Map series names and organize by the original order
+            // Organize by the original order
             var orderedCards = new List<Card>();
             foreach (var item in collectionItems)
             {
                 var card = cards.FirstOrDefault(c => c.CardId == item.CardId);
                 if (card != null)
                 {
-                    var seriesCode = card.GetSeriesCode();
-                    card.Series = _seriesMapper.GetSeriesName(seriesCode);
                     orderedCards.Add(card);
                 }
             }
@@ -210,8 +209,7 @@ namespace WSC.Services
             options.GuestId = guestId;
 
             // Use CardService's FilterCardsAsync method
-            var cardService = new CardService(_context, _seriesMapper);
-            return await cardService.FilterCardsAsync(options);
+            return await _cardService.FilterCardsAsync(options);
         }
 
         public async Task<CollectionStatistics> GetStatisticsAsync(string userId = null, string guestId = null)
@@ -242,7 +240,6 @@ namespace WSC.Services
 
             // Calculate statistics
             var cardsByType = new Dictionary<string, int>();
-            var cardsBySeries = new Dictionary<string, int>();
             var cardsByRarity = new Dictionary<string, int>();
 
             foreach (var card in cards)
@@ -254,17 +251,6 @@ namespace WSC.Services
                         cardsByType[card.CardType]++;
                     else
                         cardsByType[card.CardType] = 1;
-                }
-
-                // Series statistics
-                var seriesCode = card.GetSeriesCode();
-                var seriesName = _seriesMapper.GetSeriesName(seriesCode);
-                if (!string.IsNullOrEmpty(seriesName))
-                {
-                    if (cardsBySeries.ContainsKey(seriesName))
-                        cardsBySeries[seriesName]++;
-                    else
-                        cardsBySeries[seriesName] = 1;
                 }
 
                 // Rarity statistics
@@ -282,7 +268,6 @@ namespace WSC.Services
                 TotalUniqueCards = cards.Count,
                 TotalCardQuantity = totalQuantity,
                 CardsByType = cardsByType,
-                CardsBySeries = cardsBySeries,
                 CardsByRarity = cardsByRarity
             };
         }

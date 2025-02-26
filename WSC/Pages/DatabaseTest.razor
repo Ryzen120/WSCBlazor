@@ -1,0 +1,617 @@
+﻿@page "/dbtest"
+@using Microsoft.EntityFrameworkCore
+@using System.Text
+@using System.IO
+@using Microsoft.Data.Sqlite
+@inject WSC.Data.AppDbContext _context
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<h3>Database Connection Test</h3>
+
+@if (isLoading)
+{
+    <div class="alert alert-info">
+        <div class="d-flex align-items-center">
+            <div class="spinner-border text-info me-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span>Testing database connection...</span>
+        </div>
+    </div>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">
+        <h4>Error</h4>
+        <pre>@errorMessage</pre>
+    </div>
+}
+else
+{
+    <div class="alert alert-success">
+        <h4>Database Connected Successfully!</h4>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Connection Details</h5>
+        </div>
+        <div class="card-body">
+            <pre>@resultText</pre>
+        </div>
+    </div>
+
+    @if (sampleCards.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <h5>First 5 Cards in Database</h5>
+                <span class="badge bg-primary">@totalCards total cards</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Rarity</th>
+                                <th>Level</th>
+                                <th>Power</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var card in sampleCards)
+                            {
+                                <tr>
+                                    <td>@card.CardId</td>
+                                    <td>@card.Name</td>
+                                    <td>@card.CardType</td>
+                                    <td>@card.Rarity</td>
+                                    <td>@card.Level</td>
+                                    <td>@card.Power</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning mb-4">
+            <h5>No Cards Found in Database</h5>
+            <p>Your database exists but doesn't contain any card data.</p>
+            <button class="btn btn-primary" @onclick="SeedSampleData">Add Sample Cards</button>
+        </div>
+    }
+
+    <button class="btn btn-outline-secondary mb-3" @onclick="ToggleDangerZone">
+        @(showDangerZone ? "Hide" : "Show") Database Management
+    </button>
+
+    @if (showDangerZone)
+    {
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5>⚠️ DANGER ZONE - DATABASE OPERATIONS ⚠️</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> These operations can cause permanent data loss. Only use if you know what you're doing.
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Create CollectionItems Table</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>This will safely create just the CollectionItems table without affecting existing data.</p>
+                                <button class="btn btn-primary" @onclick="CreateCollectionItemsTable">Create CollectionItems Table</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Show Database Schema</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>View the current database tables and structure.</p>
+                                <button class="btn btn-info" @onclick="ShowDatabaseSchema">Show Schema</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-danger mt-4">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="mb-0">Dangerous Operations</h6>
+                    </div>
+                    <div class="card-body">
+                        @if (confirmRecreate)
+                        {
+                            <div class="alert alert-danger">
+                                <p><strong>Are you absolutely sure?</strong></p>
+                                <p>This will <strong>DELETE ALL DATA</strong> in the database and create a new empty database.</p>
+                                <p>Type "RECREATE" to confirm:</p>
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" @bind="confirmText" placeholder="Type RECREATE here" />
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-danger" @onclick="ExecuteRecreateDatabase" disabled="@(confirmText != "RECREATE")">
+                                        I understand the consequences. DELETE EVERYTHING
+                                    </button>
+                                    <button class="btn btn-secondary" @onclick="CancelRecreate">Cancel</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-danger" @onclick="ShowRecreateConfirmation">
+                                Recreate Database (WILL DELETE ALL DATA)
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showSchema)
+    {
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Database Schema</h5>
+            </div>
+            <div class="card-body">
+                <pre>@schemaInfo</pre>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private string resultText = string.Empty;
+    private List<WSC.Models.Card> sampleCards = new List<WSC.Models.Card>();
+    private int totalCards = 0;
+    private bool showDangerZone = false;
+    private bool confirmRecreate = false;
+    private string confirmText = string.Empty;
+    private bool showSchema = false;
+    private string schemaInfo = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TestDatabase();
+    }
+
+    private async Task TestDatabase()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        resultText = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var sb = new StringBuilder();
+
+            // Test connection
+            var connection = _context.Database.GetDbConnection();
+            await connection.OpenAsync();
+
+            sb.AppendLine("Database connected successfully!");
+            sb.AppendLine($"Connection string: {connection.ConnectionString}");
+            sb.AppendLine($"Database: {connection.Database}");
+
+            // Try to get file info if we can determine the path
+            try
+            {
+                string dbPath = "WSCards.db";
+                if (connection.ConnectionString.Contains("Data Source="))
+                {
+                    string connStr = connection.ConnectionString;
+                    int start = connStr.IndexOf("Data Source=") + 12;
+                    int end = connStr.IndexOf(";", start);
+                    if (end < 0) end = connStr.Length;
+                    dbPath = connStr.Substring(start, end - start);
+                }
+
+                bool fileExists = File.Exists(dbPath);
+                sb.AppendLine($"Database file path: {dbPath}");
+                sb.AppendLine($"Database file exists: {fileExists}");
+
+                if (fileExists)
+                {
+                    var fileInfo = new FileInfo(dbPath);
+                    var fileSizeKB = fileInfo.Length / 1024;
+                    var fileSizeMB = fileSizeKB / 1024;
+
+                    if (fileSizeMB > 1)
+                    {
+                        sb.AppendLine($"Database file size: {fileSizeMB:N2} MB ({fileSizeKB:N0} KB)");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"Database file size: {fileSizeKB:N0} KB");
+                    }
+
+                    sb.AppendLine($"Last modified: {fileInfo.LastWriteTime}");
+                }
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine($"Could not check database file: {ex.Message}");
+            }
+
+            // Safely check tables
+            try
+            {
+                totalCards = await _context.Cards.CountAsync();
+                sb.AppendLine($"Card count: {totalCards}");
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine($"Error checking Cards table: {ex.Message}");
+            }
+
+            try
+            {
+                var userCount = await _context.Users.CountAsync();
+                sb.AppendLine($"User count: {userCount}");
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine($"Error checking Users table: {ex.Message}");
+            }
+
+            try
+            {
+                var collectionCount = await _context.CollectionItems.CountAsync();
+                sb.AppendLine($"Collection items: {collectionCount}");
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine($"Error checking CollectionItems table: {ex.Message} (Table may not exist)");
+            }
+
+            // Get sample cards
+            try
+            {
+                sampleCards = await _context.Cards.Take(5).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine($"Error retrieving sample cards: {ex.Message}");
+            }
+
+            resultText = sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}\n{ex.StackTrace}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleDangerZone()
+    {
+        showDangerZone = !showDangerZone;
+        confirmRecreate = false;
+        confirmText = string.Empty;
+    }
+
+    private void ShowRecreateConfirmation()
+    {
+        confirmRecreate = true;
+        confirmText = string.Empty;
+    }
+
+    private void CancelRecreate()
+    {
+        confirmRecreate = false;
+        confirmText = string.Empty;
+    }
+
+    private async Task ExecuteRecreateDatabase()
+    {
+        if (confirmText != "RECREATE")
+            return;
+
+        try
+        {
+            errorMessage = string.Empty;
+            isLoading = true;
+            StateHasChanged();
+
+            // Recreate the database
+            await _context.Database.EnsureDeletedAsync();
+            await _context.Database.EnsureCreatedAsync();
+
+            // Add a success message
+            resultText = "Database has been recreated successfully!\n" + resultText;
+
+            // Reset UI state
+            confirmRecreate = false;
+            confirmText = string.Empty;
+
+            // Refresh the page data
+            await TestDatabase();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error recreating database: {ex.Message}\n{ex.StackTrace}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CreateCollectionItemsTable()
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            isLoading = true;
+            StateHasChanged();
+
+            var connection = _context.Database.GetDbConnection() as SqliteConnection;
+            if (connection.State != System.Data.ConnectionState.Open)
+                await connection.OpenAsync();
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = @"
+                CREATE TABLE IF NOT EXISTS ""CollectionItems"" (
+                    ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_CollectionItems"" PRIMARY KEY AUTOINCREMENT,
+                    ""CardId"" INTEGER NOT NULL,
+                    ""UserId"" TEXT NULL,
+                    ""GuestId"" TEXT NULL,
+                    ""Quantity"" INTEGER NOT NULL DEFAULT 1,
+                    ""AddedDate"" TEXT NOT NULL,
+                    ""Notes"" TEXT NULL,
+                    CONSTRAINT ""FK_CollectionItems_Cards_CardId"" FOREIGN KEY (""CardId"") REFERENCES ""Cards"" (""CardId"") ON DELETE CASCADE
+                );
+
+                CREATE INDEX IF NOT EXISTS ""IX_CollectionItems_CardId"" ON ""CollectionItems"" (""CardId"");
+                CREATE UNIQUE INDEX IF NOT EXISTS ""IX_CollectionItems_UserId_CardId"" ON ""CollectionItems"" (""UserId"", ""CardId"") WHERE ""UserId"" IS NOT NULL;
+                CREATE UNIQUE INDEX IF NOT EXISTS ""IX_CollectionItems_GuestId_CardId"" ON ""CollectionItems"" (""GuestId"", ""CardId"") WHERE ""GuestId"" IS NOT NULL;
+            ";
+                await command.ExecuteNonQueryAsync();
+            }
+
+            // Add a success message
+            resultText = "CollectionItems table created successfully!\n" + resultText;
+
+            // Refresh the page data
+            await TestDatabase();
+
+            // Show a success message to the user
+            await JSRuntime.InvokeVoidAsync("alert", "CollectionItems table created successfully!");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating CollectionItems table: {ex.Message}\n{ex.StackTrace}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ShowDatabaseSchema()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            var sb = new StringBuilder();
+            var connection = _context.Database.GetDbConnection() as SqliteConnection;
+            if (connection.State != System.Data.ConnectionState.Open)
+                await connection.OpenAsync();
+
+            // Get list of tables
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;";
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    sb.AppendLine("Database Tables:");
+                    sb.AppendLine("----------------");
+
+                    while (await reader.ReadAsync())
+                    {
+                        string tableName = reader.GetString(0);
+                        sb.AppendLine($"- {tableName}");
+                    }
+                }
+            }
+
+            // For each table, get column info
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;";
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    var tableNames = new List<string>();
+                    while (await reader.ReadAsync())
+                    {
+                        tableNames.Add(reader.GetString(0));
+                    }
+
+                    foreach (var tableName in tableNames)
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine($"Table: {tableName}");
+                        sb.AppendLine("-".PadRight(tableName.Length + 7, '-'));
+
+                        using (var tableCommand = connection.CreateCommand())
+                        {
+                            tableCommand.CommandText = $"PRAGMA table_info('{tableName}');";
+
+                            using (var tableReader = await tableCommand.ExecuteReaderAsync())
+                            {
+                                while (await tableReader.ReadAsync())
+                                {
+                                    int cid = tableReader.GetInt32(0);
+                                    string name = tableReader.GetString(1);
+                                    string type = tableReader.GetString(2);
+                                    bool notNull = tableReader.GetInt32(3) == 1;
+                                    string defaultValue = tableReader.IsDBNull(4) ? "NULL" : tableReader.GetString(4);
+                                    bool isPk = tableReader.GetInt32(5) == 1;
+
+                                    sb.AppendLine($"  {name} ({type}){(notNull ? " NOT NULL" : "")}{(isPk ? " PRIMARY KEY" : "")}");
+                                }
+                            }
+                        }
+
+                        // Get indexes
+                        using (var indexCommand = connection.CreateCommand())
+                        {
+                            indexCommand.CommandText = $"PRAGMA index_list('{tableName}');";
+
+                            using (var indexReader = await indexCommand.ExecuteReaderAsync())
+                            {
+                                bool hasIndexes = false;
+                                while (await indexReader.ReadAsync())
+                                {
+                                    if (!hasIndexes)
+                                    {
+                                        sb.AppendLine();
+                                        sb.AppendLine("  Indexes:");
+                                        hasIndexes = true;
+                                    }
+
+                                    string indexName = indexReader.GetString(1);
+                                    bool isUnique = indexReader.GetInt32(2) == 1;
+                                    sb.AppendLine($"    - {indexName}{(isUnique ? " (UNIQUE)" : "")}");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            schemaInfo = sb.ToString();
+            showSchema = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error showing schema: {ex.Message}\n{ex.StackTrace}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SeedSampleData()
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            isLoading = true;
+            StateHasChanged();
+
+            // Add sample cards
+            var newCards = new List<WSC.Models.Card>
+        {
+                new WSC.Models.Card
+                {
+                    Name = "Kirito",
+                    Rarity = "RR",
+                    CardType = "Character",
+                    Level = 2,
+                    Power = 8000,
+                    Soul = "2",
+                    Effect = "Test card effect text",
+                    Flavor = "Test flavor text",
+                    ImageData = new byte[0], // Empty image data for testing
+                    Expansion = "Sword Art Online",
+                    Color = "Blue",
+                    Cost = 1,
+                    Trigger = "Soul",
+                    Traits = "Protagonist, Swordsman",
+                    Illustrator = "Test Artist",
+                    Side = "S"
+                },
+                new WSC.Models.Card
+                {
+                    Name = "Asuna",
+                    Rarity = "RR",
+                    CardType = "Character",
+                    Level = 3,
+                    Power = 10000,
+                    Soul = "2",
+                    Effect = "Another test card effect",
+                    Flavor = "Another test flavor text",
+                    ImageData = new byte[0],
+                    Expansion = "Sword Art Online",
+                    Color = "Red",
+                    Cost = 2,
+                    Trigger = "Soul",
+                    Traits = "Fighter, Vice Commander",
+                    Illustrator = "Test Artist",
+                    Side = "S"
+                },
+                new WSC.Models.Card
+                {
+                    Name = "Saber",
+                    Rarity = "SP",
+                    CardType = "Character",
+                    Level = 3,
+                    Power = 10000,
+                    Soul = "2",
+                    Effect = "Fate series test card",
+                    Flavor = "Fate series flavor text",
+                    ImageData = new byte[0],
+                    Expansion = "Fate/Zero",
+                    Color = "Yellow",
+                    Cost = 2,
+                    Trigger = "Soul",
+                    Traits = "Servant, King",
+                    Illustrator = "Test Artist",
+                    Side = "S"
+                }
+            };
+
+            _context.Cards.AddRange(newCards);
+            await _context.SaveChangesAsync();
+
+            // Success notification
+            await JSRuntime.InvokeVoidAsync("alert", "Sample cards added successfully!");
+
+            // Refresh the page data
+            await TestDatabase();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error seeding data: {ex.Message}\n{ex.StackTrace}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

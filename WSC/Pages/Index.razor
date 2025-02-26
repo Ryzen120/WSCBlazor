@@ -23,91 +23,52 @@
 
     <div class="row mt-4">
         <div class="col-md-12">
-            <h2>Featured Series</h2>
-            <div class="row">
-                @foreach (var series in FeaturedSeries)
-                {
-                    <div class="col-md-4 col-lg-3 mb-4">
-                        <div class="card series-card" @onclick="() => ShowSeries(series.Key)">
-                            <div class="card-body">
-                                <h5 class="card-title">@series.Value</h5>
-                                <p class="card-text">Browse all cards from this series</p>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="col-md-12">
             <h2>Recently Added Cards</h2>
             @if (RecentCards == null)
             {
-                <p><em>Loading...</em></p>
-            }
+<p><em>Loading...</em></p> }
             else if (RecentCards.Count == 0)
             {
-                <p>No recent cards available.</p>
-            }
+<p>No recent cards available.</p> }
             else
             {
-                <div class="card-grid">
-                    @foreach (var card in RecentCards)
-                    {
-                        <div class="card-item">
-                            <CardDisplay Card="card" OnViewDetails="@(c => ViewCardDetails(c))" />
-                        </div>
-                    }
-                </div>
-            }
+<div class="card-grid">
+    @foreach (var card in RecentCards)
+    {
+<div class="card-item">
+    <CardDisplay Card="card" OnViewDetails="@(c => ViewCardDetails(c))" />
+</div>}
+</div>            }
         </div>
     </div>
 </div>
 
-@code {
-    private List<WSC.Models.Card> RecentCards { get; set; }
-    private Dictionary<string, string> FeaturedSeries { get; set; } = new Dictionary<string, string>
-{
-        { "SAO", "Sword Art Online" },
-        { "FZ", "Fate/Zero" },
-        { "MM", "Madoka Magica" },
-        { "AOT", "Attack on Titan" },
-        { "LL", "Love Live!" },
-        { "KS", "Konosuba" },
-        { "RZ", "Re:Zero" },
-        { "FGO", "Fate/Grand Order" }
-    };
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadRecentCards();
-    }
+@code { private List<WSC.Models.Card> RecentCards { get; set; }
 
-    private async Task LoadRecentCards()
-    {
-        var result = await CardService.GetCardsAsync(1, 8);
-        RecentCards = result.Cards;
-    }
+            protected override async Task OnInitializedAsync()
+            {
+                await LoadRecentCards();
+            }
 
-    private void GoToSearch()
-    {
-        NavigationManager.NavigateTo("/search");
-    }
+            private async Task LoadRecentCards()
+            {
+                var result = await CardService.GetCardsAsync(1, 8);
+                RecentCards = result.Cards;
+            }
 
-    private void GoToCollection()
-    {
-        NavigationManager.NavigateTo("/collection");
-    }
+            private void GoToSearch()
+            {
+                NavigationManager.NavigateTo("/search");
+            }
 
-    private void ShowSeries(string seriesCode)
-    {
-        NavigationManager.NavigateTo($"/search?series={seriesCode}");
-    }
+            private void GoToCollection()
+            {
+                NavigationManager.NavigateTo("/collection");
+            }
 
-    private void ViewCardDetails(WSC.Models.Card card)
-    {
-        NavigationManager.NavigateTo($"/card/{card.CardId}");
+            private void ViewCardDetails(WSC.Models.Card card)
+            {
+                NavigationManager.NavigateTo($"/card/{card.CardId}");
+            } 
     }
-}

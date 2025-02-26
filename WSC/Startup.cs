@@ -11,8 +11,11 @@ using WSC.Data;
 using WSC.Services;
 using WSC.Models;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+
 
 namespace WSC
 {
@@ -54,13 +57,12 @@ namespace WSC
             services.AddScoped<ICardService, CardService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ICollectionService, CollectionService>();
-            services.AddSingleton<SeriesMapper>();
             services.AddScoped<ProtectedSessionStorage>();
             services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -86,19 +88,7 @@ namespace WSC
                 endpoints.MapFallbackToPage("/_Host");
             });
 
-            // Ensure database is created
-            try
-            {
-                using var scope = app.ApplicationServices.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                context.Database.EnsureCreated();
-            }
-            catch (Exception ex)
-            {
-                var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-                var logger = loggerFactory.CreateLogger<Startup>();
-                logger.LogError(ex, "An error occurred while migrating the database.");
-            }
+            
         }
     }
 }
