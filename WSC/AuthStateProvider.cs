@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using WSCollector.Blazor.Models;
+using WSC.Models;
 
-namespace WSCollector.Blazor.Services
+namespace WSC.Services
 {
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
@@ -58,14 +58,14 @@ namespace WSCollector.Blazor.Services
             }, "CustomAuth");
 
             var claimsPrincipal = new ClaimsPrincipal(identity);
-            
+
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));
         }
 
         public async Task LogoutAsync()
         {
             await _sessionStorage.DeleteAsync("user");
-            
+
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
         }
     }

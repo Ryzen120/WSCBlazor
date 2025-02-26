@@ -33,8 +33,8 @@
                                  IsSelected="SelectedCard?.CardId == card.CardId"
                                  UserId="@UserId"
                                  GuestId="@GuestId"
-                                 OnSelect="SelectCard"
-                                 OnViewDetails="ViewCardDetails" />
+                                 OnSelect="@(c => SelectCard(c))"
+                                 OnViewDetails="@(c => ViewCardDetails(c))" />
                 </div>
             }
         </div>

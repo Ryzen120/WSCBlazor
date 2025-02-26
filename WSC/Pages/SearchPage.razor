@@ -57,7 +57,7 @@
                     @foreach (var card in RecentCards)
                     {
                         <div class="card-item">
-                            <CardDisplay Card="card" OnViewDetails="ViewCardDetails" />
+                            <CardDisplay Card="card" OnViewDetails="@(c => ViewCardDetails(c))" />
                         </div>
                     }
                 </div>
