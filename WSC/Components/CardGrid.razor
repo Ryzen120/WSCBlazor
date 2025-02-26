@@ -1,4 +1,5 @@
 @using WSCollector.Blazor.Models
+@using WSCollector.Blazor.Components
 @using System.Security.Claims
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -161,7 +162,7 @@
 </style>
 
 <style>
-    @media (max-width: 768px) {
+    @@media (max-width: 768px) {
         .card-grid {
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 10px;
@@ -170,7 +171,7 @@
 </style>
 
 <style>
-    @media (max-width: 480px) {
+    @@media (max-width: 480px) {
         .card-grid {
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 8px;

@@ -69,7 +69,7 @@
 @code {
     private List<Card> RecentCards { get; set; }
     private Dictionary<string, string> FeaturedSeries { get; set; } = new Dictionary<string, string>
-    {
+{
         { "SAO", "Sword Art Online" },
         { "FZ", "Fate/Zero" },
         { "MM", "Madoka Magica" },
@@ -126,10 +126,10 @@
         height: 100%;
     }
 
-    .series-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
+        .series-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
 
     .card-grid {
         display: grid;
@@ -141,7 +141,7 @@
         display: flex;
     }
 
-    @media (max-width: 768px) {
+    @@media (max-width: 768px) {
         .card-grid {
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 10px;

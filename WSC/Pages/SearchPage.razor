@@ -1,184 +1,150 @@
-@page "/search"
-@page "/search/{SeriesCode}"
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.WebUtilities
-@using System.Security.Claims
-@using WSCollector.Blazor.Components
+@page "/"
 @using WSCollector.Blazor.Models
 @using WSCollector.Blazor.Services
+@using WSCollector.Blazor.Components
 @inject ICardService CardService
 @inject NavigationManager NavigationManager
-@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="container-fluid">
-    <h1>Card Search</h1>
-    
-    <CardSearchFilters Filter="@Filter" OnFilterChanged="HandleFilterChanged" ShowCollectionFilter="true" />
-    
-    @if (IsLoading)
-    {
-        <div class="text-center p-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2">Loading cards...</p>
+    <div class="jumbotron">
+        <h1 class="display-4">WS Collector</h1>
+        <p class="lead">Manage your Weiss Schwarz card collection with ease</p>
+        <hr class="my-4">
+        <p>Search through thousands of cards, build your collection, and keep track of what you own.</p>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-lg" @onclick="GoToSearch">
+                <i class="oi oi-magnifying-glass"></i> Search Cards
+            </button>
+            <button class="btn btn-success btn-lg" @onclick="GoToCollection">
+                <i class="oi oi-grid-three-up"></i> My Collection
+            </button>
         </div>
-    }
-    else
-    {
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <span class="badge bg-primary">@TotalCards Total Cards</span>
-                <span class="badge bg-secondary ms-2">Page @CurrentPage of @TotalPages</span>
-            </div>
-            
-            <div class="btn-group">
-                <button class="btn btn-outline-secondary" disabled="@(Cards?.Count == 0)" @onclick="ExportToCSV">
-                    <i class="oi oi-data-transfer-download"></i> Export
-                </button>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h2>Featured Series</h2>
+            <div class="row">
+                @foreach (var series in FeaturedSeries)
+                {
+                    <div class="col-md-4 col-lg-3 mb-4">
+                        <div class="card series-card" @onclick="() => ShowSeries(series.Key)">
+                            <div class="card-body">
+                                <h5 class="card-title">@series.Value</h5>
+                                <p class="card-text">Browse all cards from this series</p>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
-        
-        <CardGrid 
-            Cards="@Cards" 
-            TotalCards="@TotalCards" 
-            CurrentPage="@CurrentPage" 
-            PageSize="@PageSize" 
-            IsLoading="@IsLoading"
-            OnPageChanged="HandlePageChanged" />
-    }
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h2>Recently Added Cards</h2>
+            @if (RecentCards == null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            else if (RecentCards.Count == 0)
+            {
+                <p>No recent cards available.</p>
+            }
+            else
+            {
+                <div class="card-grid">
+                    @foreach (var card in RecentCards)
+                    {
+                        <div class="card-item">
+                            <CardDisplay Card="card" OnViewDetails="ViewCardDetails" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
 @code {
-    [Parameter]
-    public string SeriesCode { get; set; }
-    
-    private List<Card> Cards { get; set; } = new List<Card>();
-    private int TotalCards { get; set; }
-    private int CurrentPage { get; set; } = 1;
-    private int PageSize { get; set; } = 20;
-    private bool IsLoading { get; set; } = true;
-    private int TotalPages => (int)Math.Ceiling((double)TotalCards / PageSize);
-    private CardFilterOptions Filter { get; set; } = new CardFilterOptions();
-    private string UserId { get; set; }
-    
+    private List<Card> RecentCards { get; set; }
+    private Dictionary<string, string> FeaturedSeries { get; set; } = new Dictionary<string, string>
+{
+        { "SAO", "Sword Art Online" },
+        { "FZ", "Fate/Zero" },
+        { "MM", "Madoka Magica" },
+        { "AOT", "Attack on Titan" },
+        { "LL", "Love Live!" },
+        { "KS", "Konosuba" },
+        { "RZ", "Re:Zero" },
+        { "FGO", "Fate/Grand Order" }
+    };
+
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        
-        if (user.Identity.IsAuthenticated)
-        {
-            UserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        }
-        
-        Filter.Page = CurrentPage;
-        Filter.PageSize = PageSize;
-        
-        await LoadCards();
+        await LoadRecentCards();
     }
-    
-    protected override async Task OnParametersSetAsync()
+
+    private async Task LoadRecentCards()
     {
-        if (!string.IsNullOrEmpty(SeriesCode) && Filter.Series != SeriesCode)
-        {
-            Filter.Series = SeriesCode;
-            await LoadCards();
-        }
-        
-        await ParseQueryString();
+        var result = await CardService.GetCardsAsync(1, 8);
+        RecentCards = result.Cards;
     }
-    
-    private async Task ParseQueryString()
+
+    private void GoToSearch()
     {
-        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-        
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("series", out var seriesParam))
-        {
-            Filter.Series = seriesParam.ToString();
-        }
-        
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("search", out var searchParam))
-        {
-            Filter.SearchText = searchParam.ToString();
-        }
-        
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("page", out var pageParam) && 
-            int.TryParse(pageParam, out var page))
-        {
-            CurrentPage = page;
-            Filter.Page = page;
-        }
-        
-        await LoadCards();
+        NavigationManager.NavigateTo("/search");
     }
-    
-    private async Task LoadCards()
+
+    private void GoToCollection()
     {
-        IsLoading = true;
-        
-        try
-        {
-            var result = await CardService.FilterCardsAsync(Filter);
-            Cards = result.Cards;
-            TotalCards = result.TotalCount;
-        }
-        catch (Exception ex)
-        {
-            // Handle error
-            Console.Error.WriteLine($"Error loading cards: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        NavigationManager.NavigateTo("/collection");
     }
-    
-    private async Task HandleFilterChanged(CardFilterOptions newFilter)
+
+    private void ShowSeries(string seriesCode)
     {
-        Filter = newFilter;
-        CurrentPage = 1;
-        Filter.Page = 1;
-        
-        UpdateQueryString();
-        await LoadCards();
+        NavigationManager.NavigateTo($"/search?series={seriesCode}");
     }
-    
-    private async Task HandlePageChanged(int page)
+
+    private void ViewCardDetails(Card card)
     {
-        CurrentPage = page;
-        Filter.Page = page;
-        
-        UpdateQueryString();
-        await LoadCards();
-    }
-    
-    private void UpdateQueryString()
-    {
-        var queryParams = new Dictionary<string, string>();
-        
-        if (!string.IsNullOrEmpty(Filter.Series))
-        {
-            queryParams["series"] = Filter.Series;
-        }
-        
-        if (!string.IsNullOrEmpty(Filter.SearchText))
-        {
-            queryParams["search"] = Filter.SearchText;
-        }
-        
-        if (CurrentPage > 1)
-        {
-            queryParams["page"] = CurrentPage.ToString();
-        }
-        
-        var newUri = QueryHelpers.AddQueryString("/search", queryParams);
-        NavigationManager.NavigateTo(newUri);
-    }
-    
-    private void ExportToCSV()
-    {
-        // This would typically use JSInterop to trigger a download
-        // For now, just a placeholder
+        NavigationManager.NavigateTo($"/card/{card.CardId}");
     }
 }
+
+<style>
+    .jumbotron {
+        padding: 2rem 1rem;
+        margin-bottom: 2rem;
+        background-color: #e9ecef;
+        border-radius: 0.3rem;
+    }
+
+    .series-card {
+        transition: all 0.3s;
+        cursor: pointer;
+        height: 100%;
+    }
+
+        .series-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .card-item {
+        display: flex;
+    }
+
+    @@media (max-width: 768px) {
+        .card-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+        }
+    }
+</style>
