@@ -3,6 +3,7 @@
 @using System.Security.Claims
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IGuestStorage GuestStorage
 
 <div class="card-grid-container">
     @if (Cards == null || Cards.Count == 0)
@@ -94,9 +95,7 @@
 
     private async Task<string> GetOrCreateGuestId()
     {
-        // In a real app, you would implement this with JSInterop to access localStorage
-        // For now, we'll just return a static value
-        return "guest-12345";
+        return await GuestStorage.GetGuestIdAsync();
     }
 
     private void ChangePage(int page)

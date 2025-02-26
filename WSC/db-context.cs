@@ -38,18 +38,13 @@ namespace WSC.Data
                 .HasForeignKey(ci => ci.CardId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Define a unique constraint for user collection items
-            // (A user can only have one entry per card in their collection)
+            // Define indexes for collection items
+            // Note: SQLite doesn't support filtered indexes, so we'll enforce uniqueness in application code
             modelBuilder.Entity<CollectionItem>()
-                .HasIndex(ci => new { ci.UserId, ci.CardId })
-                .IsUnique()
-                .HasFilter("[UserId] IS NOT NULL");
+                .HasIndex(ci => new { ci.UserId, ci.CardId });
 
-            // Define a unique constraint for guest collection items
             modelBuilder.Entity<CollectionItem>()
-                .HasIndex(ci => new { ci.GuestId, ci.CardId })
-                .IsUnique()
-                .HasFilter("[GuestId] IS NOT NULL");
+                .HasIndex(ci => new { ci.GuestId, ci.CardId });
         }
     }
 }

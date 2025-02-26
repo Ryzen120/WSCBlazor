@@ -6,6 +6,7 @@
 @inject ICardService CardService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IGuestStorage GuestStorage
 
 <div class="container">
     <h1>Card Search</h1>
@@ -45,8 +46,8 @@
         }
         else
         {
-            // Get or create guest ID (in a real app, this would use localStorage)
-            guestId = "guest-" + Guid.NewGuid().ToString();
+            // Get or create guest ID from browser storage
+            guestId = await GuestStorage.GetGuestIdAsync();
             filterOptions.GuestId = guestId;
         }
 

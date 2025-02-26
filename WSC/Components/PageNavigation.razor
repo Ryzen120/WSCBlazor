@@ -11,10 +11,11 @@
         Previous
     </button>
 
-    @foreach (var page in GetPageNumbers())
+    @foreach (var pageNum in GetPageNumbers())
     {
-        <button class="btn @(page == CurrentPage ? "btn-primary" : "btn-outline-primary")"
-                @onclick="() => OnPageClick(page)">
+        <button class="btn @(pageNum == CurrentPage ? "btn-primary" : "btn-outline-primary")"
+                @onclick="() => OnPageClick(pageNum)">
+            @pageNum
         </button>
     }
 
@@ -39,12 +40,12 @@
     [Parameter]
     public EventCallback<int> OnPageChanged { get; set; }
 
-    private void OnPageClick(int page)
+    private void OnPageClick(int pageNum)
     {
-        if (page >= 1 && page <= TotalPages && page != CurrentPage)
+        if (pageNum >= 1 && pageNum <= TotalPages && pageNum != CurrentPage)
         {
-            CurrentPage = page;
-            OnPageChanged.InvokeAsync(page);
+            CurrentPage = pageNum;
+            OnPageChanged.InvokeAsync(pageNum);
         }
     }
 

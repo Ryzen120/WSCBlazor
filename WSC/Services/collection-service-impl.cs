@@ -36,10 +36,12 @@ namespace WSC.Services
             }
 
             // Check if the card is already in the collection
+            // Handle user and guest collections separately to ensure proper uniqueness
             var existingItem = await _context.CollectionItems
                 .FirstOrDefaultAsync(ci =>
                     ci.CardId == cardId &&
-                    (ci.UserId == userId || ci.GuestId == guestId));
+                    ((userId != null && ci.UserId == userId) ||
+                     (guestId != null && ci.GuestId == guestId)));
 
             if (existingItem != null)
             {

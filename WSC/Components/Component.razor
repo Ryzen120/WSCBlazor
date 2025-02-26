@@ -5,6 +5,8 @@
 @using System.Security.Claims
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IGuestStorage GuestStorage
+@inject ICardService CardService
 
 <div class="container">
     <h1>Component View</h1>
@@ -50,8 +52,8 @@
         }
         else
         {
-            // Get or create guest ID
-            guestId = "guest-" + Guid.NewGuid().ToString();
+            // Get or create guest ID from browser storage
+            guestId = await GuestStorage.GetGuestIdAsync();
             filterOptions.GuestId = guestId;
         }
 
@@ -60,8 +62,27 @@
 
     private async Task LoadCards()
     {
-        // Implementation would go here
-        // This is just a placeholder to match the component interface
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            filterOptions.Page = currentPage;
+            filterOptions.PageSize = pageSize;
+
+            var result = await CardService.FilterCardsAsync(filterOptions);
+            cards = result.Cards;
+            totalCards = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading cards: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 
     private async Task HandleFilterChange(CardFilterOptions options)

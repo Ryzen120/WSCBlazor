@@ -59,10 +59,11 @@ namespace WSC
             services.AddScoped<ICollectionService, CollectionService>();
             services.AddScoped<ProtectedSessionStorage>();
             services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+            services.AddScoped<IGuestStorage, GuestStorageService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {
@@ -88,7 +89,13 @@ namespace WSC
                 endpoints.MapFallbackToPage("/_Host");
             });
 
-            
+            // Initialize database
+            using (var scope = serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
+                await DbInitializer.Initialize(dbContext, logger);
+            }
         }
     }
 }
