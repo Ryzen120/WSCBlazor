@@ -1,0 +1,111 @@
+﻿@page "/search"
+@using WSC.Models
+@using WSC.Services
+@using WSC.Components
+@using System.Security.Claims
+@inject ICardService CardService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="container">
+    <h1>Card Search</h1>
+
+    <CardSearchFilters Filter="@filterOptions" OnFilterChanged="HandleFilterChange" ShowCollectionFilter="true" />
+
+    <div class="mt-4">
+        <CardGrid Cards="@cards"
+                  TotalCards="@totalCards"
+                  CurrentPage="@currentPage"
+                  PageSize="@pageSize"
+                  IsLoading="@isLoading"
+                  OnPageChanged="HandlePageChange"
+                  OnCardSelected="HandleCardSelected" />
+    </div>
+</div>
+
+@code {
+    private List<Card> cards = new List<Card>();
+    private int totalCards = 0;
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private bool isLoading = false;
+    private CardFilterOptions filterOptions = new CardFilterOptions();
+    private string userId;
+    private string guestId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            filterOptions.UserId = userId;
+        }
+        else
+        {
+            // Get or create guest ID (in a real app, this would use localStorage)
+            guestId = "guest-" + Guid.NewGuid().ToString();
+            filterOptions.GuestId = guestId;
+        }
+
+        await LoadCards();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Check for query parameters
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("series", out var seriesValue))
+        {
+            filterOptions.Series = seriesValue.ToString();
+            await LoadCards();
+        }
+    }
+
+    private async Task LoadCards()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            filterOptions.Page = currentPage;
+            filterOptions.PageSize = pageSize;
+
+            var result = await CardService.FilterCardsAsync(filterOptions);
+            cards = result.Cards;
+            totalCards = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            // In a real app, you might want to log this error
+            Console.Error.WriteLine($"Error loading cards: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleFilterChange(CardFilterOptions options)
+    {
+        filterOptions = options;
+        currentPage = 1; // Reset to first page when filters change
+        await LoadCards();
+    }
+
+    private async Task HandlePageChange(int page)
+    {
+        currentPage = page;
+        await LoadCards();
+    }
+
+    private void HandleCardSelected(Card card)
+    {
+        // Handle card selection if needed
+    }
+}
