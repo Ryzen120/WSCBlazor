@@ -1,0 +1,267 @@
+@using WSCollector.Blazor.Models
+@using WSCollector.Blazor.Services
+@inject ICollectionService CollectionService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+
+<div class="card-container @(IsSelected ? "selected" : "")">
+    <div class="card-image" @onclick="OnCardClick">
+        @if (Card.ImageData != null && Card.ImageData.Length > 0)
+        {
+            <img src="@GetImageUrl()" alt="@Card.Name" />
+        }
+        else
+        {
+            <div class="no-image">No Image Available</div>
+        }
+    </div>
+    <div class="card-info">
+        <div class="card-title" title="@Card.Name">@Card.Name</div>
+        <div class="card-details">
+            <span class="card-number">@Card.CardNumber</span>
+            <span class="card-rarity">@Card.Rarity</span>
+        </div>
+        <div class="card-properties">
+            @if (!string.IsNullOrEmpty(Card.CardType))
+            {
+                <span class="badge bg-secondary">@Card.CardType</span>
+            }
+            @if (Card.Level > 0)
+            {
+                <span class="badge bg-info">Lvl @Card.Level</span>
+            }
+            @if (Card.Power > 0)
+            {
+                <span class="badge bg-danger">@Card.Power</span>
+            }
+            @if (!string.IsNullOrEmpty(Card.Soul))
+            {
+                <span class="badge bg-warning">Soul @Card.Soul</span>
+            }
+        </div>
+        <div class="card-actions">
+            @if (!string.IsNullOrEmpty(UserId) || !string.IsNullOrEmpty(GuestId))
+            {
+                @if (InCollection)
+                {
+                    <div class="quantity-controls">
+                        <button class="btn btn-sm btn-outline-primary" @onclick="DecrementQuantity">-</button>
+                        <span class="quantity">@Quantity</span>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="IncrementQuantity">+</button>
+                    </div>
+                    <button class="btn btn-sm btn-danger" @onclick="RemoveFromCollection">Remove</button>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-primary" @onclick="AddToCollection">Add to Collection</button>
+                }
+            }
+            <button class="btn btn-sm btn-info" @onclick="ViewDetails">Details</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Card Card { get; set; }
+
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    [Parameter]
+    public string UserId { get; set; }
+
+    [Parameter]
+    public string GuestId { get; set; }
+
+    [Parameter]
+    public EventCallback<Card> OnSelect { get; set; }
+
+    [Parameter]
+    public EventCallback<Card> OnViewDetails { get; set; }
+
+    private bool InCollection { get; set; }
+    private int Quantity { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Card != null && (!string.IsNullOrEmpty(UserId) || !string.IsNullOrEmpty(GuestId)))
+        {
+            await CheckCollectionStatus();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Card != null && (!string.IsNullOrEmpty(UserId) || !string.IsNullOrEmpty(GuestId)))
+        {
+            await CheckCollectionStatus();
+        }
+    }
+
+    private async Task CheckCollectionStatus()
+    {
+        InCollection = await CollectionService.IsInCollectionAsync(Card.CardId, UserId, GuestId);
+        Quantity = await CollectionService.GetQuantityAsync(Card.CardId, UserId, GuestId);
+    }
+
+    private async Task OnCardClick()
+    {
+        if (OnSelect.HasDelegate)
+        {
+            await OnSelect.InvokeAsync(Card);
+        }
+    }
+
+    private async Task ViewDetails()
+    {
+        if (OnViewDetails.HasDelegate)
+        {
+            await OnViewDetails.InvokeAsync(Card);
+        }
+    }
+
+    private string GetImageUrl()
+    {
+        if (Card.ImageData == null || Card.ImageData.Length == 0)
+            return string.Empty;
+
+        var base64Image = Convert.ToBase64String(Card.ImageData);
+        return $"data:image/jpeg;base64,{base64Image}";
+    }
+
+    private async Task AddToCollection()
+    {
+        bool success = await CollectionService.AddToCollectionAsync(Card.CardId, UserId, GuestId);
+        if (success)
+        {
+            InCollection = true;
+            Quantity = 1;
+            await JSRuntime.InvokeVoidAsync("alert", "Card added to collection!");
+        }
+    }
+
+    private async Task RemoveFromCollection()
+    {
+        bool success = await CollectionService.RemoveFromCollectionAsync(Card.CardId, UserId, GuestId);
+        if (success)
+        {
+            InCollection = false;
+            Quantity = 0;
+            await JSRuntime.InvokeVoidAsync("alert", "Card removed from collection!");
+        }
+    }
+
+    private async Task IncrementQuantity()
+    {
+        Quantity++;
+        await CollectionService.UpdateQuantityAsync(Card.CardId, Quantity, UserId, GuestId);
+    }
+
+    private async Task DecrementQuantity()
+    {
+        if (Quantity > 1)
+        {
+            Quantity--;
+            await CollectionService.UpdateQuantityAsync(Card.CardId, Quantity, UserId, GuestId);
+        }
+        else
+        {
+            await RemoveFromCollection();
+        }
+    }
+}
+
+<style>
+    .card-container {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s;
+        height: 100%;
+        background-color: white;
+    }
+
+    .card-container:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .card-container.selected {
+        border: 2px solid #007bff;
+        box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    }
+
+    .card-image {
+        height: 250px;
+        overflow: hidden;
+        background-color: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .no-image {
+        color: #888;
+        text-align: center;
+        font-style: italic;
+    }
+
+    .card-info {
+        padding: 10px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-title {
+        font-weight: bold;
+        font-size: 1rem;
+        margin-bottom: 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .card-details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .card-properties {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 10px;
+    }
+
+    .card-actions {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+    }
+
+    .quantity {
+        padding: 0 10px;
+        font-weight: bold;
+    }
+</style>

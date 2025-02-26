@@ -1,0 +1,179 @@
+@using WSCollector.Blazor.Models
+@using System.Security.Claims
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="card-grid-container">
+    @if (Cards == null || Cards.Count == 0)
+    {
+        <div class="no-cards-message">
+            @if (IsLoading)
+            {
+                <div class="spinner-container">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading cards...</p>
+                </div>
+            }
+            else
+            {
+                <p>No cards found matching your criteria.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card-grid">
+            @foreach (var card in Cards)
+            {
+                <div class="card-item">
+                    <CardDisplay Card="card"
+                                 IsSelected="SelectedCard?.CardId == card.CardId"
+                                 UserId="@UserId"
+                                 GuestId="@GuestId"
+                                 OnSelect="SelectCard"
+                                 OnViewDetails="ViewCardDetails" />
+                </div>
+            }
+        </div>
+
+        @if (TotalCards > PageSize)
+        {
+            <div class="pagination-container">
+                <PageNavigation CurrentPage="CurrentPage"
+                                TotalPages="@((int)Math.Ceiling((double)TotalCards / PageSize))"
+                                OnPageChanged="ChangePage" />
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<Card> Cards { get; set; }
+
+    [Parameter]
+    public int TotalCards { get; set; }
+
+    [Parameter]
+    public int CurrentPage { get; set; } = 1;
+
+    [Parameter]
+    public int PageSize { get; set; } = 20;
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPageChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<Card> OnCardSelected { get; set; }
+
+    private Card SelectedCard { get; set; }
+    private string UserId { get; set; }
+    private string GuestId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        }
+        else
+        {
+            // Get or create guest ID from local storage
+            GuestId = await GetOrCreateGuestId();
+        }
+    }
+
+    private async Task<string> GetOrCreateGuestId()
+    {
+        // In a real app, you would implement this with JSInterop to access localStorage
+        // For now, we'll just return a static value
+        return "guest-12345";
+    }
+
+    private void ChangePage(int page)
+    {
+        if (OnPageChanged.HasDelegate)
+        {
+            OnPageChanged.InvokeAsync(page);
+        }
+    }
+
+    private void SelectCard(Card card)
+    {
+        SelectedCard = card;
+        if (OnCardSelected.HasDelegate)
+        {
+            OnCardSelected.InvokeAsync(card);
+        }
+    }
+
+    private void ViewCardDetails(Card card)
+    {
+        NavigationManager.NavigateTo($"/card/{card.CardId}");
+    }
+}
+
+<style>
+    .card-grid-container {
+        width: 100%;
+    }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .card-item {
+        display: flex;
+    }
+
+    .no-cards-message {
+        padding: 40px;
+        text-align: center;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .spinner-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+</style>
+
+<style>
+    @media (max-width: 768px) {
+        .card-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+        }
+    }
+</style>
+
+<style>
+    @media (max-width: 480px) {
+        .card-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 8px;
+        }
+    }
+</style>

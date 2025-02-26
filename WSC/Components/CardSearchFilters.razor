@@ -1,0 +1,249 @@
+@using WSCollector.Blazor.Models
+@using WSCollector.Blazor.Services
+@inject ICardService CardService
+@inject SeriesMapper SeriesMapper
+
+<div class="card filter-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Search Filters</h5>
+        <button class="btn btn-sm btn-outline-secondary" @onclick="ToggleFilterVisibility">
+            @(ShowFilters ? "Hide Filters" : "Show Filters")
+        </button>
+    </div>
+    
+    <div class="card-body @(ShowFilters ? "" : "d-none")">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="form-group">
+                    <label for="searchText">Search Text</label>
+                    <input type="text" class="form-control" id="searchText" 
+                           @bind="Filter.SearchText" @bind:event="oninput" 
+                           placeholder="Card name, number, effects..." />
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <div class="form-group">
+                    <label for="series">Series</label>
+                    <select class="form-select" id="series" @bind="Filter.Series">
+                        <option value="">All Series</option>
+                        @foreach (var series in SeriesList)
+                        {
+                            <option value="@series.Key">@series.Value</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <div class="form-group">
+                    <label for="cardType">Card Type</label>
+                    <select class="form-select" id="cardType" @bind="Filter.CardType">
+                        <option value="">All Types</option>
+                        @foreach (var type in CardTypes)
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="form-group">
+                    <label for="rarity">Rarity</label>
+                    <select class="form-select" id="rarity" @bind="Filter.Rarity">
+                        <option value="">All Rarities</option>
+                        @foreach (var rarity in Rarities)
+                        {
+                            <option value="@rarity">@rarity</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="form-group">
+                    <label for="level">Level</label>
+                    <select class="form-select" id="level" @bind="Filter.Level">
+                        <option value="">All Levels</option>
+                        @foreach (var level in Levels)
+                        {
+                            <option value="@level">@level</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="form-group">
+                    <label for="soul">Soul</label>
+                    <select class="form-select" id="soul" @bind="Filter.Soul">
+                        <option value="">All Soul Values</option>
+                        @foreach (var soul in SoulValues)
+                        {
+                            <option value="@soul">@soul</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="form-group">
+                    <label for="power">Power</label>
+                    <select class="form-select" id="power" @bind="Filter.Power">
+                        <option value="">All Powers</option>
+                        @foreach (var power in Powers)
+                        {
+                            <option value="@power">@power</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="form-group">
+                    <label for="expansion">Expansion</label>
+                    <select class="form-select" id="expansion" @bind="Filter.Expansion">
+                        <option value="">All Expansions</option>
+                        @foreach (var expansion in Expansions)
+                        {
+                            <option value="@expansion">@expansion</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <div class="form-group">
+                    <label for="trigger">Trigger</label>
+                    <select class="form-select" id="trigger" @bind="Filter.Trigger">
+                        <option value="">All Triggers</option>
+                        @foreach (var trigger in Triggers)
+                        {
+                            <option value="@trigger">@trigger</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <div class="form-group">
+                    <label for="color">Color</label>
+                    <select class="form-select" id="color" @bind="Filter.Color">
+                        <option value="">All Colors</option>
+                        @foreach (var color in Colors)
+                        {
+                            <option value="@color">@color</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        @if (ShowCollectionFilter)
+        {
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="collectionOnly" 
+                       @bind="Filter.CollectionOnly" />
+                <label class="form-check-label" for="collectionOnly">
+                    My Collection Only
+                </label>
+            </div>
+        }
+        
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-primary" @onclick="ApplyFilters">Apply Filters</button>
+            <button class="btn btn-secondary" @onclick="ResetFilters">Reset Filters</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public CardFilterOptions Filter { get; set; } = new CardFilterOptions();
+    
+    [Parameter]
+    public EventCallback<CardFilterOptions> OnFilterChanged { get; set; }
+    
+    [Parameter]
+    public bool ShowCollectionFilter { get; set; }
+    
+    private bool ShowFilters { get; set; } = true;
+    
+    private Dictionary<string, string> SeriesList { get; set; } = new Dictionary<string, string>();
+    private List<string> CardTypes { get; set; } = new List<string>();
+    private List<string> Rarities { get; set; } = new List<string>();
+    private List<int> Levels { get; set; } = new List<int>();
+    private List<string> SoulValues { get; set; } = new List<string>();
+    private List<int> Powers { get; set; } = new List<int>();
+    private List<string> Expansions { get; set; } = new List<string>();
+    private List<string> Triggers { get; set; } = new List<string>();
+    private List<string> Colors { get; set; } = new List<string>();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFilterOptions();
+    }
+    
+    private async Task LoadFilterOptions()
+    {
+        // Load filter options from service
+        SeriesList = SeriesMapper.GetAllSeries();
+        
+        // Load other filter options
+        CardTypes = await CardService.GetCardTypesAsync();
+        Rarities = await CardService.GetRaritiesAsync();
+        Levels = await CardService.GetLevelsAsync();
+        SoulValues = await CardService.GetSoulValuesAsync();
+        Powers = await CardService.GetPowerValuesAsync();
+        Expansions = await CardService.GetExpansionsAsync();
+        Triggers = await CardService.GetTriggersAsync();
+        Colors = await CardService.GetColorsAsync();
+    }
+    
+    private void ToggleFilterVisibility()
+    {
+        ShowFilters = !ShowFilters;
+    }
+    
+    private async Task ApplyFilters()
+    {
+        if (OnFilterChanged.HasDelegate)
+        {
+            await OnFilterChanged.InvokeAsync(Filter);
+        }
+    }
+    
+    private async Task ResetFilters()
+    {
+        Filter = new CardFilterOptions
+        {
+            Page = Filter.Page,
+            PageSize = Filter.PageSize
+        };
+        
+        if (OnFilterChanged.HasDelegate)
+        {
+            await OnFilterChanged.InvokeAsync(Filter);
+        }
+    }
+}
+
+<style>
+    .filter-card {
+        margin-bottom: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 10px;
+    }
+    
+    label {
+        font-weight: 500;
+        margin-bottom: 3px;
+    }
+</style>

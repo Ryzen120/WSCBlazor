@@ -1,0 +1,35 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using WSCollector.Blazor.Services
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject IUserService UserService
+
+<AuthorizeView>
+    <Authorized>
+        <span class="user-welcome">Welcome, @context.User.Identity.Name!</span>
+        <button class="btn btn-link" @onclick="LogoutClick">Logout</button>
+    </Authorized>
+    <NotAuthorized>
+        <a href="login">Login</a>
+        <a href="register">Register</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private async Task LogoutClick()
+    {
+        var authStateProvider = (AuthenticationStateProvider as CustomAuthenticationStateProvider);
+        if (authStateProvider != null)
+        {
+            await authStateProvider.LogoutAsync();
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}
+
+<style>
+    .user-welcome {
+        margin-right: 1rem;
+    }
+</style>

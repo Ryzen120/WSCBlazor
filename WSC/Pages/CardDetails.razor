@@ -1,0 +1,440 @@
+@page "/card/{CardId:int}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
+@using System.Security.Claims
+@using WSCollector.Blazor.Models
+@using WSCollector.Blazor.Services
+@inject ICardService CardService
+@inject ICollectionService CollectionService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+
+<div class="container mt-4">
+    @if (IsLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading card details...</p>
+        </div>
+    }
+    else if (Card == null)
+    {
+        <div class="alert alert-warning">
+            <h4>Card not found</h4>
+            <p>The card you're looking for couldn't be found. It may have been removed or you may have followed an invalid link.</p>
+            <button class="btn btn-primary" @onclick="GoBack">Go Back</button>
+        </div>
+    }
+    else
+    {
+        <div class="card-details-container">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card-image-container">
+                        @if (Card.ImageData != null && Card.ImageData.Length > 0)
+                        {
+                            <img src="@GetImageUrl()" alt="@Card.Name" class="card-image" />
+                        }
+                        else
+                        {
+                            <div class="no-image">No Image Available</div>
+                        }
+                    </div>
+                </div>
+                
+                <div class="col-md-7">
+                    <div class="card-info">
+                        <h1 class="card-title">@Card.Name</h1>
+                        
+                        <div class="card-identifier">
+                            <span class="card-number">@Card.CardNumber</span>
+                            <span class="card-id">ID: @Card.CardId</span>
+                        </div>
+                        
+                        <div class="card-badges mb-3">
+                            @if (!string.IsNullOrEmpty(Card.CardType))
+                            {
+                                <span class="badge bg-primary">@Card.CardType</span>
+                            }
+                            @if (!string.IsNullOrEmpty(Card.Rarity))
+                            {
+                                <span class="badge bg-secondary">@Card.Rarity</span>
+                            }
+                            @if (!string.IsNullOrEmpty(Card.Color))
+                            {
+                                <span class="badge bg-@GetColorClass(Card.Color)">@Card.Color</span>
+                            }
+                            @if (!string.IsNullOrEmpty(Card.Series))
+                            {
+                                <span class="badge bg-info">@Card.Series</span>
+                            }
+                        </div>
+                        
+                        <div class="card-stats">
+                            <div class="row">
+                                <div class="col-md-3 col-6">
+                                    <div class="stat-box">
+                                        <div class="stat-label">Level</div>
+                                        <div class="stat-value">@Card.Level</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="stat-box">
+                                        <div class="stat-label">Power</div>
+                                        <div class="stat-value">@Card.Power</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="stat-box">
+                                        <div class="stat-label">Soul</div>
+                                        <div class="stat-value">@Card.Soul</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="stat-box">
+                                        <div class="stat-label">Cost</div>
+                                        <div class="stat-value">@Card.Cost</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-properties mt-3">
+                            @if (!string.IsNullOrEmpty(Card.Trigger))
+                            {
+                                <div class="property">
+                                    <span class="property-label">Trigger:</span>
+                                    <span class="property-value">@Card.Trigger</span>
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Card.Traits))
+                            {
+                                <div class="property">
+                                    <span class="property-label">Traits:</span>
+                                    <span class="property-value">@Card.Traits</span>
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Card.Effect))
+                            {
+                                <div class="property">
+                                    <span class="property-label">Effect:</span>
+                                    <div class="property-value card-text">@Card.Effect</div>
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Card.Flavor))
+                            {
+                                <div class="property">
+                                    <span class="property-label">Flavor Text:</span>
+                                    <div class="property-value card-flavor">@Card.Flavor</div>
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Card.Illustrator))
+                            {
+                                <div class="property">
+                                    <span class="property-label">Illustrator:</span>
+                                    <span class="property-value">@Card.Illustrator</span>
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Card.Expansion))
+                            {
+                                <div class="property">
+                                    <span class="property-label">Expansion:</span>
+                                    <span class="property-value">@Card.Expansion</span>
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Card.Side))
+                            {
+                                <div class="property">
+                                    <span class="property-label">Side:</span>
+                                    <span class="property-value">@Card.Side</span>
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="card-actions mt-4">
+                            @if (InCollection)
+                            {
+                                <div class="quantity-controls">
+                                    <button class="btn btn-outline-primary" @onclick="DecrementQuantity">-</button>
+                                    <span class="quantity">@Quantity</span>
+                                    <button class="btn btn-outline-primary" @onclick="IncrementQuantity">+</button>
+                                </div>
+                                <button class="btn btn-danger" @onclick="RemoveFromCollection">Remove from Collection</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-primary" @onclick="AddToCollection">Add to Collection</button>
+                            }
+                            
+                            <button class="btn btn-secondary" @onclick="GoBack">Go Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int CardId { get; set; }
+    
+    private Card Card { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool InCollection { get; set; }
+    private int Quantity { get; set; }
+    private string UserId { get; set; }
+    private string GuestId { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        if (user.Identity.IsAuthenticated)
+        {
+            UserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        }
+        else
+        {
+            // Get or create guest ID from local storage
+            GuestId = await GetOrCreateGuestId();
+        }
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        IsLoading = true;
+        
+        try
+        {
+            Card = await CardService.GetCardByIdAsync(CardId);
+            
+            if (Card != null && (!string.IsNullOrEmpty(UserId) || !string.IsNullOrEmpty(GuestId)))
+            {
+                InCollection = await CollectionService.IsInCollectionAsync(CardId, UserId, GuestId);
+                Quantity = await CollectionService.GetQuantityAsync(CardId, UserId, GuestId);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.Error.WriteLine($"Error loading card: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+    
+    private async Task<string> GetOrCreateGuestId()
+    {
+        // In a real app, you would implement this with JSInterop to access localStorage
+        // For now, we'll just return a static value
+        return "guest-12345";
+    }
+    
+    private string GetImageUrl()
+    {
+        if (Card.ImageData == null || Card.ImageData.Length == 0)
+            return string.Empty;
+            
+        var base64Image = Convert.ToBase64String(Card.ImageData);
+        return $"data:image/jpeg;base64,{base64Image}";
+    }
+    
+    private string GetColorClass(string color)
+    {
+        return color?.ToLower() switch
+        {
+            "yellow" => "warning",
+            "red" => "danger",
+            "blue" => "primary",
+            "green" => "success",
+            "purple" => "purple",
+            _ => "secondary"
+        };
+    }
+    
+    private async Task AddToCollection()
+    {
+        bool success = await CollectionService.AddToCollectionAsync(CardId, UserId, GuestId);
+        if (success)
+        {
+            InCollection = true;
+            Quantity = 1;
+            await JSRuntime.InvokeVoidAsync("alert", "Card added to collection!");
+        }
+    }
+    
+    private async Task RemoveFromCollection()
+    {
+        bool success = await CollectionService.RemoveFromCollectionAsync(CardId, UserId, GuestId);
+        if (success)
+        {
+            InCollection = false;
+            Quantity = 0;
+            await JSRuntime.InvokeVoidAsync("alert", "Card removed from collection!");
+        }
+    }
+    
+    private async Task IncrementQuantity()
+    {
+        Quantity++;
+        await CollectionService.UpdateQuantityAsync(CardId, Quantity, UserId, GuestId);
+    }
+    
+    private async Task DecrementQuantity()
+    {
+        if (Quantity > 1)
+        {
+            Quantity--;
+            await CollectionService.UpdateQuantityAsync(CardId, Quantity, UserId, GuestId);
+        }
+        else
+        {
+            await RemoveFromCollection();
+        }
+    }
+    
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/search");
+    }
+}
+
+<style>
+    .card-details-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        padding: 20px;
+    }
+    
+    .card-image-container {
+        display: flex;
+        justify-content: center;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        overflow: hidden;
+        min-height: 400px;
+    }
+    
+    .card-image {
+        max-width: 100%;
+        max-height: 600px;
+        object-fit: contain;
+    }
+    
+    .no-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #888;
+        font-style: italic;
+    }
+    
+    .card-title {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-identifier {
+        display: flex;
+        justify-content: space-between;
+        color: #666;
+        margin-bottom: 1rem;
+    }
+    
+    .card-badges .badge {
+        margin-right: 5px;
+        padding: 6px 10px;
+    }
+    
+    .card-stats {
+        margin: 15px 0;
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .property {
+        margin-bottom: 10px;
+    }
+    
+    .property-label {
+        font-weight: bold;
+        display: block;
+    }
+    
+    .card-text, .card-flavor {
+        white-space: pre-line;
+        margin-top: 5px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+    
+    .card-flavor {
+        font-style: italic;
+    }
+    
+    .card-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+    }
+    
+    .quantity {
+        padding: 0 15px;
+        font-weight: bold;
+    }
+    
+    /* Custom badge color for purple */
+    .badge.bg-purple {
+        background-color: #6f42c1;
+    }
+    
+    @media (max-width: 768px) {
+        .card-image-container {
+            min-height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>

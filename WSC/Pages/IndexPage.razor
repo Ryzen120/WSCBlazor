@@ -1,0 +1,150 @@
+@page "/"
+@using WSCollector.Blazor.Models
+@using WSCollector.Blazor.Services
+@using WSCollector.Blazor.Components
+@inject ICardService CardService
+@inject NavigationManager NavigationManager
+
+<div class="container-fluid">
+    <div class="jumbotron">
+        <h1 class="display-4">WS Collector</h1>
+        <p class="lead">Manage your Weiss Schwarz card collection with ease</p>
+        <hr class="my-4">
+        <p>Search through thousands of cards, build your collection, and keep track of what you own.</p>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-lg" @onclick="GoToSearch">
+                <i class="oi oi-magnifying-glass"></i> Search Cards
+            </button>
+            <button class="btn btn-success btn-lg" @onclick="GoToCollection">
+                <i class="oi oi-grid-three-up"></i> My Collection
+            </button>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h2>Featured Series</h2>
+            <div class="row">
+                @foreach (var series in FeaturedSeries)
+                {
+                    <div class="col-md-4 col-lg-3 mb-4">
+                        <div class="card series-card" @onclick="() => ShowSeries(series.Key)">
+                            <div class="card-body">
+                                <h5 class="card-title">@series.Value</h5>
+                                <p class="card-text">Browse all cards from this series</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h2>Recently Added Cards</h2>
+            @if (RecentCards == null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            else if (RecentCards.Count == 0)
+            {
+                <p>No recent cards available.</p>
+            }
+            else
+            {
+                <div class="card-grid">
+                    @foreach (var card in RecentCards)
+                    {
+                        <div class="card-item">
+                            <CardDisplay Card="card" OnViewDetails="ViewCardDetails" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Card> RecentCards { get; set; }
+    private Dictionary<string, string> FeaturedSeries { get; set; } = new Dictionary<string, string>
+    {
+        { "SAO", "Sword Art Online" },
+        { "FZ", "Fate/Zero" },
+        { "MM", "Madoka Magica" },
+        { "AOT", "Attack on Titan" },
+        { "LL", "Love Live!" },
+        { "KS", "Konosuba" },
+        { "RZ", "Re:Zero" },
+        { "FGO", "Fate/Grand Order" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecentCards();
+    }
+
+    private async Task LoadRecentCards()
+    {
+        var result = await CardService.GetCardsAsync(1, 8);
+        RecentCards = result.Cards;
+    }
+
+    private void GoToSearch()
+    {
+        NavigationManager.NavigateTo("/search");
+    }
+
+    private void GoToCollection()
+    {
+        NavigationManager.NavigateTo("/collection");
+    }
+
+    private void ShowSeries(string seriesCode)
+    {
+        NavigationManager.NavigateTo($"/search?series={seriesCode}");
+    }
+
+    private void ViewCardDetails(Card card)
+    {
+        NavigationManager.NavigateTo($"/card/{card.CardId}");
+    }
+}
+
+<style>
+    .jumbotron {
+        padding: 2rem 1rem;
+        margin-bottom: 2rem;
+        background-color: #e9ecef;
+        border-radius: 0.3rem;
+    }
+
+    .series-card {
+        transition: all 0.3s;
+        cursor: pointer;
+        height: 100%;
+    }
+
+    .series-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .card-item {
+        display: flex;
+    }
+
+    @media (max-width: 768px) {
+        .card-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+        }
+    }
+</style>

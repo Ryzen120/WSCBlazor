@@ -1,0 +1,19 @@
+﻿<div>
+    <button class="btn btn-primary" @onclick="OnButtonClick">Page 1</button>
+</div>
+
+@code {
+    [Parameter]
+    public int CurrentPage { get; set; } = 1;
+
+    [Parameter]
+    public int TotalPages { get; set; } = 1;
+
+    [Parameter]
+    public EventCallback<int> OnPageChanged { get; set; }
+
+    private void OnButtonClick()
+    {
+        OnPageChanged.InvokeAsync(1);
+    }
+}
