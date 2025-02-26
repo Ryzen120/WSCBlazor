@@ -1,30 +1,30 @@
-﻿@namespace WSCollector.Blazor.Components
+﻿@namespace WSC.Components
 
 <div class="pagination">
-    <button class="btn btn-outline-primary @(CurrentPage == 1 ? "disabled" : "")"
+    <button class="btn btn-outline-primary @(CurrentPage == 1 ? " disabled" : "" )"
             @onclick="() => OnPageClick(1)" disabled="@(CurrentPage == 1)">
         First
     </button>
 
-    <button class="btn btn-outline-primary @(CurrentPage == 1 ? "disabled" : "")"
+    <button class="btn btn-outline-primary @(CurrentPage == 1 ? " disabled" : "" )"
             @onclick="() => OnPageClick(CurrentPage - 1)" disabled="@(CurrentPage == 1)">
         Previous
     </button>
 
     @foreach (var page in GetPageNumbers())
     {
-        <button class="btn @(page == CurrentPage ? "btn-primary" : "btn-outline-primary")"
-                @onclick="() => OnPageClick(page)">
-            @page
-        </button>
+    <button class="btn @(page == CurrentPage ? " btn-primary" : "btn-outline-primary" )"
+            @onclick="() => OnPageClick(page)">
+        @page
+    </button>
     }
 
-    <button class="btn btn-outline-primary @(CurrentPage == TotalPages ? "disabled" : "")"
+    <button class="btn btn-outline-primary @(CurrentPage == TotalPages ? " disabled" : "" )"
             @onclick="() => OnPageClick(CurrentPage + 1)" disabled="@(CurrentPage == TotalPages)">
         Next
     </button>
 
-    <button class="btn btn-outline-primary @(CurrentPage == TotalPages ? "disabled" : "")"
+    <button class="btn btn-outline-primary @(CurrentPage == TotalPages ? " disabled" : "" )"
             @onclick="() => OnPageClick(TotalPages)" disabled="@(CurrentPage == TotalPages)">
         Last
     </button>
@@ -38,45 +38,48 @@
     public int TotalPages { get; set; } = 1;
 
     [Parameter]
-    public EventCallback<int> OnPageChanged { get; set; }
+    public EventCallback<int>
+    OnPageChanged { get; set; }
 
     private void OnPageClick(int page)
     {
-        if (page >= 1 && page <= TotalPages && page != CurrentPage)
-        {
-            CurrentPage = page;
-            OnPageChanged.InvokeAsync(page);
-        }
-    }
-
-    private List<int> GetPageNumbers()
+    if (page >= 1 && page <= TotalPages && page != CurrentPage)
     {
-        var pages = new List<int>();
+    CurrentPage = page;
+    OnPageChanged.InvokeAsync(page);
+    }
+    }
 
-        // Always show current page
-        pages.Add(CurrentPage);
-
-        // Add pages before current
-        for (int i = 1; i <= 2; i++)
+    private List<int>
+        GetPageNumbers()
         {
+        var pages = new List<int>
+            ();
+
+            // Always show current page
+            pages.Add(CurrentPage);
+
+            // Add pages before current
+            for (int i = 1; i <= 2; i++)
+            {
             if (CurrentPage - i >= 1)
-                pages.Insert(0, CurrentPage - i);
-        }
+            pages.Insert(0, CurrentPage - i);
+            }
 
-        // Add pages after current
-        for (int i = 1; i <= 2; i++)
-        {
+            // Add pages after current
+            for (int i = 1; i <= 2; i++)
+            {
             if (CurrentPage + i <= TotalPages)
-                pages.Add(CurrentPage + i);
-        }
+            pages.Add(CurrentPage + i);
+            }
 
-        return pages;
-    }
-}
+            return pages;
+            }
+            }
 
-<style>
-    .pagination {
-        display: flex;
-        gap: 5px;
-    }
-</style>
+            <style>
+                .pagination {
+                    display: flex;
+                    gap: 5px;
+                }
+            </style>

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using WSCollector.Blazor.Models;
+using WSC.Models;
 
-namespace WSCollector.Blazor.Data
+namespace WSC.Data
 {
     public class AppDbContext : DbContext
     {

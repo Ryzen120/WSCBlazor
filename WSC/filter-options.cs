@@ -1,4 +1,4 @@
-namespace WSCollector.Blazor.Models
+namespace WSC.Models
 {
     public class CardFilterOptions
     {

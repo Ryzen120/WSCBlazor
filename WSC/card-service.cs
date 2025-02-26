@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using WSCollector.Blazor.Models;
+using WSC.Models;
 
-namespace WSCollector.Blazor.Services
+namespace WSC.Services
 {
     public interface ICardService
     {

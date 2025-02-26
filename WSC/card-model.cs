@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace WSCollector.Blazor.Models
+namespace WSC.Models
 {
     public class Card
     {

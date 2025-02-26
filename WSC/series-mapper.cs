@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace WSCollector.Blazor.Services
+namespace WSC.Services
 {
     /// <summary>
     /// Maps card series codes to full series names

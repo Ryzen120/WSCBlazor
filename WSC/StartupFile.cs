@@ -6,14 +6,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
-using WSCollector.Blazor.Data;
-using WSCollector.Blazor.Services;
-using WSCollector.Blazor.Models;
+using WSC.Data;
+using WSC.Services;
+using WSC.Models;
 using System;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
-namespace WSCollector.Blazor
+namespace WSC
 {
     public class Startup
     {
@@ -101,3 +101,4 @@ namespace WSCollector.Blazor
         }
     }
 }
+

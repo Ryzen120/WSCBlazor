@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>WSC</RootNamespace>
+    <AssemblyName>WSC</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

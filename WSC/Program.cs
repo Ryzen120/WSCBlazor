@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace WSCollector.Blazor
+namespace WSC
 {
     public class Program
     {
@@ -20,3 +20,4 @@ namespace WSCollector.Blazor
                 });
     }
 }
+

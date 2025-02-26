@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace WSCollector.Blazor.Models
+namespace WSC.Models
 {
     public class User
     {

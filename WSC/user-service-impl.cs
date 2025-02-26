@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using WSCollector.Blazor.Data;
-using WSCollector.Blazor.Models;
+using WSC.Data;
+using WSC.Models;
 
-namespace WSCollector.Blazor.Services
+namespace WSC.Services
 {
     public class UserService : IUserService
     {
