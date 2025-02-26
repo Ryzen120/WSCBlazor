@@ -7,7 +7,7 @@
 
 <div class="container-fluid">
     <div class="jumbotron">
-        <h1 class="display-4">WS Collector</h1>
+        <h1 class="display-4">WSC</h1>
         <p class="lead">Manage your Weiss Schwarz card collection with ease</p>
         <hr class="my-4">
         <p>Search through thousands of cards, build your collection, and keep track of what you own.</p>
@@ -67,7 +67,7 @@
 </div>
 
 @code {
-    private List<Card> RecentCards { get; set; }
+    private List<WSC.Models.Card> RecentCards { get; set; }
     private Dictionary<string, string> FeaturedSeries { get; set; } = new Dictionary<string, string>
 {
         { "SAO", "Sword Art Online" },
@@ -106,45 +106,8 @@
         NavigationManager.NavigateTo($"/search?series={seriesCode}");
     }
 
-    private void ViewCardDetails(Card card)
+    private void ViewCardDetails(WSC.Models.Card card)
     {
         NavigationManager.NavigateTo($"/card/{card.CardId}");
     }
 }
-
-<style>
-    .jumbotron {
-        padding: 2rem 1rem;
-        margin-bottom: 2rem;
-        background-color: #e9ecef;
-        border-radius: 0.3rem;
-    }
-
-    .series-card {
-        transition: all 0.3s;
-        cursor: pointer;
-        height: 100%;
-    }
-
-        .series-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-    .card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 20px;
-    }
-
-    .card-item {
-        display: flex;
-    }
-
-    @@media (max-width: 768px) {
-        .card-grid {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 10px;
-        }
-    }
-</style>

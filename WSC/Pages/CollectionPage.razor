@@ -86,13 +86,13 @@
 </div>
 
 @code {
-    private List<Card> cards = new List<Card>();
+    private List<WSC.Models.Card> cards = new List<WSC.Models.Card>();
     private int totalCards = 0;
     private int currentPage = 1;
     private int pageSize = 20;
     private bool isLoading = false;
     private CollectionStatistics stats;
-    private CardFilterOptions filterOptions = new CardFilterOptions { CollectionOnly = true };
+    private WSC.Models.CardFilterOptions filterOptions = new WSC.Models.CardFilterOptions { CollectionOnly = true };
     private string userId;
     private string guestId;
 
@@ -155,7 +155,7 @@
         }
     }
 
-    private async Task HandleFilterChange(CardFilterOptions options)
+    private async Task HandleFilterChange(WSC.Models.CardFilterOptions options)
     {
         options.CollectionOnly = true; // Always enforce collection only
         options.UserId = userId;
@@ -172,24 +172,8 @@
         await LoadCollection();
     }
 
-    private void HandleCardSelected(Card card)
+    private void HandleCardSelected(WSC.Models.Card card)
     {
         // Handle card selection if needed
     }
 }
-
-<style>
-    .stat-item {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-    }
-
-    .stat-label {
-        font-weight: 500;
-    }
-
-    .stat-value {
-        font-weight: 600;
-    }
-</style>

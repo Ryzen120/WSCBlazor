@@ -75,10 +75,10 @@
     public string GuestId { get; set; }
 
     [Parameter]
-    public EventCallback<Card> OnSelect { get; set; }
+    public EventCallback<WSC.Models.Card> OnSelect { get; set; }
 
     [Parameter]
-    public EventCallback<Card> OnViewDetails { get; set; }
+    public EventCallback<WSC.Models.Card> OnViewDetails { get; set; }
 
     private bool InCollection { get; set; }
     private int Quantity { get; set; }

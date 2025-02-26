@@ -164,16 +164,16 @@
 
 @code {
     [Parameter]
-    public CardFilterOptions Filter { get; set; } = new CardFilterOptions();
-    
+    public WSC.Models.CardFilterOptions Filter { get; set; }
+
     [Parameter]
-    public EventCallback<CardFilterOptions> OnFilterChanged { get; set; }
-    
+    public EventCallback<WSC.Models.CardFilterOptions> OnFilterChanged { get; set; }
+
     [Parameter]
     public bool ShowCollectionFilter { get; set; }
-    
+
     private bool ShowFilters { get; set; } = true;
-    
+
     private Dictionary<string, string> SeriesList { get; set; } = new Dictionary<string, string>();
     private List<string> CardTypes { get; set; } = new List<string>();
     private List<string> Rarities { get; set; } = new List<string>();
@@ -183,17 +183,17 @@
     private List<string> Expansions { get; set; } = new List<string>();
     private List<string> Triggers { get; set; } = new List<string>();
     private List<string> Colors { get; set; } = new List<string>();
-    
+
     protected override async Task OnInitializedAsync()
     {
         await LoadFilterOptions();
     }
-    
+
     private async Task LoadFilterOptions()
     {
         // Load filter options from service
         SeriesList = SeriesMapper.GetAllSeries();
-        
+
         // Load other filter options
         CardTypes = await CardService.GetCardTypesAsync();
         Rarities = await CardService.GetRaritiesAsync();
@@ -204,12 +204,12 @@
         Triggers = await CardService.GetTriggersAsync();
         Colors = await CardService.GetColorsAsync();
     }
-    
+
     private void ToggleFilterVisibility()
     {
         ShowFilters = !ShowFilters;
     }
-    
+
     private async Task ApplyFilters()
     {
         if (OnFilterChanged.HasDelegate)
@@ -217,7 +217,7 @@
             await OnFilterChanged.InvokeAsync(Filter);
         }
     }
-    
+
     private async Task ResetFilters()
     {
         Filter = new CardFilterOptions
@@ -225,7 +225,7 @@
             Page = Filter.Page,
             PageSize = Filter.PageSize
         };
-        
+
         if (OnFilterChanged.HasDelegate)
         {
             await OnFilterChanged.InvokeAsync(Filter);
