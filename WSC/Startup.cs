@@ -25,8 +25,6 @@ namespace WSC
             _configuration = configuration;
         }
 
-        public IConfiguration Configuration => _configuration;
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -36,7 +34,7 @@ namespace WSC
 
             // Configure SQLite database
             services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlite(_configuration.GetConnectionString("DefaultConnection")));
 
             // Configure authentication
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

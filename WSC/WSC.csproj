@@ -6,13 +6,10 @@
     <AssemblyName>WSC</AssemblyName>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="AuthStateProvider.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="AuthStateProvider.cs" />
-  </ItemGroup>
+  <!-- Remove the explicit Compile item since it's already included by default -->
+  <!-- <ItemGroup>
+    <Compile Include="AuthStateProvider.cs" />
+  </ItemGroup> -->
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="5.0.17" />
